@@ -354,15 +354,13 @@ GIT_API_URL=https://code.onedev.io/~api  # or https://onedev.mycompany.com/~api
 3. Select your repository, leave **Framework Preset** as **Other**, and click **Deploy**.
 4. In the Vercel Dashboard, go to **Settings -> Environment Variables** and add your provider configuration (e.g. `GIT_PROVIDER`, `GIT_TOKEN`, `REPO_OWNER`, `REPO_NAME`).
 5. **Deployment Protection / OPTIONS Allowlist (Required if Deployment Protection is enabled):**  
-   If Vercel Deployment Protection (or Vercel Authentication) is enabled on your project or preview deployments, allow CORS preflight (`OPTIONS`) requests so client applications (such as Tauri Webviews or web frontends) can reach the API without 401 Unauthorized or redirect errors:
+   If Vercel Deployment Protection (or Vercel Authentication) is enabled on your project or preview deployments, allow CORS preflight (`OPTIONS`) requests so client applications (such as Tauri Webviews or web frontends) can reach the API without 401 Unauthorized or redirect errors.
+
+   Because Vercel limits the OPTIONS Allowlist to a maximum of 4 paths, all endpoints support the common `/api` prefix (e.g. `/api/update`, `/api/download`, `/api/latest`, `/api/release-notes`, `/api/file`, `/api/files`):
    - Go to **Project Settings -> Deployment Protection -> OPTIONS Allowlist** (see [Vercel Documentation](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/options-allowlist)).
-   - Add the following paths to the allowlist:
-     - `/update`
-     - `/download`
-     - `/latest`
-     - `/release-notes`
-     - `/file`
-     - `/files`
+   - Add the following path to the allowlist:
+     - `/api`
+
 6. Redeploy the latest deployment to apply the environment variables and settings.
 
 ---
