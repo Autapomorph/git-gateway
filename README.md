@@ -297,7 +297,15 @@ GIT_API_URL=https://code.onedev.io/~api  # or https://onedev.mycompany.com/~api
 2. Log in to [Vercel](https://vercel.com/) and click **Add New -> Project**.
 3. Select your repository, leave **Framework Preset** as **Other**, and click **Deploy**.
 4. In the Vercel Dashboard, go to **Settings -> Environment Variables** and add your provider configuration (e.g. `GIT_PROVIDER`, `GIT_TOKEN`, `REPO_OWNER`, `REPO_NAME`).
-5. Redeploy the latest deployment to apply the environment variables.
+5. **Deployment Protection / OPTIONS Allowlist (Required if Deployment Protection is enabled):**  
+   If Vercel Deployment Protection (or Vercel Authentication) is enabled on your project or preview deployments, allow CORS preflight (`OPTIONS`) requests so client applications (such as Tauri Webviews or web frontends) can reach the API without 401 Unauthorized or redirect errors:
+   - Go to **Project Settings -> Deployment Protection -> OPTIONS Allowlist** (see [Vercel Documentation](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/options-allowlist)).
+   - Add the following paths to the allowlist:
+     - `/update`
+     - `/download`
+     - `/latest`
+     - `/release-notes`
+6. Redeploy the latest deployment to apply the environment variables and settings.
 
 ---
 
