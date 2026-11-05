@@ -1,4 +1,5 @@
 import {
+  type FileResult,
   type GitProvider,
   type StreamAssetResult,
   type UnifiedAsset,
@@ -12,6 +13,7 @@ import {
   REPO_OWNER,
   validateProviderEnv,
 } from '../config/index.js';
+import { getMimeType } from '../mime.js';
 
 interface GitLabReleaseLink {
   direct_asset_url?: string;
@@ -124,6 +126,31 @@ export class GitLabProvider implements GitProvider {
         url: link.url,
         downloadUrl: link.direct_asset_url ?? link.url,
       })),
+    };
+  }
+
+  public async getFile(filePath: string, ref: string): Promise<FileResult | null> {
+    const headers = this.getHeaders();
+    const cleanPath = filePath.replace(/^\/+/, '');
+    const encodedPath = encodeURIComponent(cleanPath);
+    const refParam = `?ref=${encodeURIComponent(ref)}`;
+    const res = await fetch(
+      `${this.baseUrl}/projects/${this.projectId}/repository/files/${encodedPath}/raw${refParam}`,
+      { headers },
+    );
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    const content = Buffer.from(arrayBuffer);
+    const contentType = getMimeType(cleanPath);
+
+    return {
+      content,
+      contentType,
+      size: content.byteLength,
     };
   }
 

@@ -142,6 +142,62 @@ Returns an array of all available versions that have release notes files in `<RE
 
 ---
 
+### 6. Single File Download (Raw Content)
+
+```http
+GET /file/:path*
+GET /file?path=:path&ref=:ref
+```
+
+Fetches the raw contents of any file from the repository, securely streaming or sending it with the appropriate `Content-Type` header without exposing access tokens.
+
+- **Parameters:**
+  - `path` — File path in repository (e.g. `package.json`, `assets/logo.png`, `src/config.json`).
+  - `ref` _(optional)_ — Git branch, tag, or commit hash (defaults to `REPO_BRANCH`, e.g. `main`).
+- **Response:**
+  - `200 OK` with raw content (`application/json`, `image/png`, `text/plain`, etc.).
+  - `404 Not Found` if the file doesn't exist.
+
+---
+
+### 7. Batch Files Download (Multiple Files in JSON)
+
+```http
+POST /files?ref=:ref
+GET /files?paths=:path1,:path2&ref=:ref
+```
+
+Retrieves multiple files in a single network request as a JSON object. Text files are encoded in `utf-8`, and binary files are encoded in `base64`.
+
+- **Parameters:**
+  - `ref` _(optional)_ — Git branch, tag, or commit hash (defaults to `REPO_BRANCH`).
+  - `paths` — Array of file paths (via JSON body `{"paths": [...]}` in `POST`) or comma-separated string in `GET`. Maximum 50 files per request.
+- **Response Example:**
+  ```json
+  {
+    "ref": "main",
+    "files": {
+      "package.json": {
+        "content": "{\n  \"name\": \"my-app\" ... }",
+        "contentType": "application/json; charset=utf-8",
+        "encoding": "utf-8",
+        "size": 1240
+      },
+      "assets/icon.png": {
+        "content": "iVBORw0KGgoAAAANSUhEUgAA...",
+        "contentType": "image/png",
+        "encoding": "base64",
+        "size": 5432
+      }
+    },
+    "errors": {
+      "missing-file.txt": "Not Found"
+    }
+  }
+  ```
+
+---
+
 ## Update Channels & Precedence
 
 Channel names are **fully arbitrary strings** (e.g. `stable`, `prerelease`, `alpha`, `beta`, `nightly`, `canary`, `preview`, `dev`) and are not restricted to a fixed set:
@@ -305,6 +361,8 @@ GIT_API_URL=https://code.onedev.io/~api  # or https://onedev.mycompany.com/~api
      - `/download`
      - `/latest`
      - `/release-notes`
+     - `/file`
+     - `/files`
 6. Redeploy the latest deployment to apply the environment variables and settings.
 
 ---

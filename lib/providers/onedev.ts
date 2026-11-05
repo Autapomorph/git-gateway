@@ -1,4 +1,5 @@
 import {
+  type FileResult,
   type GitProvider,
   type StreamAssetResult,
   type UnifiedAsset,
@@ -12,6 +13,7 @@ import {
   REPO_OWNER,
   validateProviderEnv,
 } from '../config/index.js';
+import { getMimeType } from '../mime.js';
 
 interface OneDevTag {
   message?: string;
@@ -100,6 +102,28 @@ export class OneDevProvider implements GitProvider {
       draft: false,
       prerelease: t.name.includes('-'),
       assets: [],
+    };
+  }
+
+  public async getFile(filePath: string, ref: string): Promise<FileResult | null> {
+    const headers = this.getHeaders();
+    const cleanPath = filePath.replace(/^\/+/, '');
+    const url = `${this.baseUrl}/projects/${this.projectPath}/blob?revision=${encodeURIComponent(ref)}&path=${encodeURIComponent(cleanPath)}`;
+
+    const res = await fetch(url, { headers });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    const content = Buffer.from(arrayBuffer);
+    const contentType = getMimeType(cleanPath);
+
+    return {
+      content,
+      contentType,
+      size: content.byteLength,
     };
   }
 

@@ -25,8 +25,15 @@ export interface StreamAssetResult {
   stream?: NodeJS.ReadableStream | ReadableStream | null;
 }
 
+export interface FileResult {
+  content: Buffer;
+  contentType: string;
+  size: number;
+}
+
 export interface GitProvider {
   getAssetSignature(asset: UnifiedAsset): Promise<string>;
+  getFile(path: string, ref: string): Promise<FileResult | null>;
   getRawFile(path: string, ref: string): Promise<string | null>;
   getReleaseByTag(tag: string): Promise<UnifiedRelease | null>;
   getReleases(): Promise<UnifiedRelease[]>;

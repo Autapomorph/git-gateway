@@ -1,4 +1,5 @@
 import {
+  type FileResult,
   type GitProvider,
   type StreamAssetResult,
   type UnifiedAsset,
@@ -12,6 +13,7 @@ import {
   REPO_OWNER,
   validateProviderEnv,
 } from '../config/index.js';
+import { getMimeType } from '../mime.js';
 
 interface GitFlicAttachment {
   downloadUrl?: string;
@@ -170,6 +172,43 @@ export class GitFlicProvider implements GitProvider {
         url: a.downloadUrl,
         downloadUrl: a.downloadUrl,
       })),
+    };
+  }
+
+  public async getFile(filePath: string, ref: string): Promise<FileResult | null> {
+    const headers = this.getHeaders();
+    const cleanPath = filePath.replace(/^\/+/, '');
+
+    let res = await fetch(
+      `${this.projectUrl}/raw?branch=${encodeURIComponent(ref)}&path=${encodeURIComponent(cleanPath)}`,
+      { headers },
+    );
+
+    if (!res.ok && res.status === 404) {
+      res = await fetch(
+        `${this.projectUrl}/blob/raw?branch=${encodeURIComponent(ref)}&file=${encodeURIComponent(cleanPath)}`,
+        { headers },
+      );
+    }
+
+    if (!res.ok && res.status === 404) {
+      res = await fetch(`${this.projectUrl}/raw/${encodeURIComponent(ref)}/${cleanPath}`, {
+        headers,
+      });
+    }
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    const content = Buffer.from(arrayBuffer);
+    const contentType = getMimeType(cleanPath);
+
+    return {
+      content,
+      contentType,
+      size: content.byteLength,
     };
   }
 

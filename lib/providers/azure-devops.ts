@@ -1,4 +1,5 @@
 import {
+  type FileResult,
   type GitProvider,
   type StreamAssetResult,
   type UnifiedAsset,
@@ -12,6 +13,7 @@ import {
   REPO_OWNER,
   validateProviderEnv,
 } from '../config/index.js';
+import { getMimeType } from '../mime.js';
 
 interface AzureTagRef {
   name: string;
@@ -114,6 +116,27 @@ export class AzureDevOpsProvider implements GitProvider {
       draft: false,
       prerelease: tagName.includes('-'),
       assets: [],
+    };
+  }
+
+  public async getFile(filePath: string, ref: string): Promise<FileResult | null> {
+    const headers = this.getHeaders();
+    const cleanPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
+    const url = `${this.repoUrl}/items?path=${encodeURIComponent(cleanPath)}&versionDescriptor.version=${encodeURIComponent(ref)}&$format=octetStream&api-version=7.1`;
+    const res = await fetch(url, { headers });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    const content = Buffer.from(arrayBuffer);
+    const contentType = getMimeType(cleanPath);
+
+    return {
+      content,
+      contentType,
+      size: content.byteLength,
     };
   }
 

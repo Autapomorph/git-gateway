@@ -1,4 +1,5 @@
 import {
+  type FileResult,
   type GitProvider,
   type StreamAssetResult,
   type UnifiedAsset,
@@ -12,6 +13,7 @@ import {
   REPO_OWNER,
   validateProviderEnv,
 } from '../config/index.js';
+import { getMimeType } from '../mime.js';
 
 interface GiteaAsset {
   browser_download_url: string;
@@ -121,6 +123,28 @@ export class GiteaProvider implements GitProvider {
         url: a.browser_download_url,
         downloadUrl: a.browser_download_url,
       })),
+    };
+  }
+
+  public async getFile(filePath: string, ref: string): Promise<FileResult | null> {
+    const headers = this.getHeaders();
+    const cleanPath = filePath.replace(/^\/+/, '');
+    const res = await fetch(`${this.repoUrl}/raw/${encodeURIComponent(ref)}/${cleanPath}`, {
+      headers,
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    const content = Buffer.from(arrayBuffer);
+    const contentType = getMimeType(cleanPath);
+
+    return {
+      content,
+      contentType,
+      size: content.byteLength,
     };
   }
 

@@ -4,7 +4,7 @@
       "source": "/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
         {
           "key": "Access-Control-Allow-Headers",
           "value": "Accept, Content-Type, X-App-Language, X-Update-Channel, X-Vercel-Protection-Bypass"
@@ -13,6 +13,18 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/file/(.*)",
+      "destination": "/api/file?path=$1"
+    },
+    {
+      "source": "/file",
+      "destination": "/api/file"
+    },
+    {
+      "source": "/files",
+      "destination": "/api/files"
+    },
     {
       "source": "/update/:target/:version",
       "destination": "/api/update?target=:target&version=:version"
