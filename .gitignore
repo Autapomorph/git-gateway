@@ -48,5 +48,9 @@ next-env.d.ts
 # Vercel
 .vercel/
 
+# Build
+dist/
+
+
 # Keys
 *.pem

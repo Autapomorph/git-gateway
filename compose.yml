@@ -1,0 +1,42 @@
+services:
+  tauri-updater:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tauri-updater
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - tauri-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: tauri-nginx
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/certs:/etc/nginx/certs:ro
+    depends_on:
+      tauri-updater:
+        condition: service_healthy
+    networks:
+      - tauri-net
+
+networks:
+  tauri-net:
+    driver: bridge

@@ -1,5 +1,0 @@
-export const DEFAULT_FALLBACK_LANGUAGE = 'en';
-
-export const FALLBACK_LANGUAGE = (
-  process.env.FALLBACK_LANGUAGE ?? DEFAULT_FALLBACK_LANGUAGE
-).trim();

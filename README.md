@@ -365,6 +365,22 @@ GIT_API_URL=https://code.onedev.io/~api  # or https://onedev.mycompany.com/~api
 
 ---
 
+## Deployment with Docker
+
+You can run the proxy completely self-hosted using Docker and Compose without any dependency on Vercel:
+
+```bash
+# 1. Copy and edit environment configuration
+cp .env.example .env
+
+# 2. Build and run via Compose (includes Nginx reverse proxy)
+docker compose up -d --build
+```
+
+For full setup, architecture details, and SSL configuration, see the [Docker Deployment Guide](docs/docker.md).
+
+---
+
 ## Configuring Tauri Application
 
 In your Tauri project's `tauri.conf.json`, specify your proxy endpoint:

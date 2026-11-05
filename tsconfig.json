@@ -22,5 +22,5 @@
     "noUncheckedSideEffectImports": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["api/**/*", "lib/**/*", "eslint.config.ts"]
+  "include": ["src/**/*", "api/**/*", "tsup.config.ts", "eslint.config.ts"]
 }
