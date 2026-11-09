@@ -1,9 +1,9 @@
 services:
-  tauri-updater:
+  tauri-gateway:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: tauri-updater
+    container_name: tauri-gateway
     restart: unless-stopped
     env_file:
       - path: .env
@@ -32,7 +32,7 @@ services:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./docker/certs:/etc/nginx/certs:ro
     depends_on:
-      tauri-updater:
+      tauri-gateway:
         condition: service_healthy
     networks:
       - tauri-net

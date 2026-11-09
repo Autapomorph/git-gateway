@@ -1,6 +1,6 @@
-# Tauri Updater Proxy
+# Tauri Gateway
 
-A high-performance, multi-provider auto-updater and release notes proxy server for Tauri v2 applications. It allows you to securely distribute updates and release notes from private or public repositories across all major Git hosting platforms.
+A high-performance, secure Git API gateway and auto-updater proxy for Tauri v2 applications. It enables Tauri apps to seamlessly interact with private and public Git repositories (fetching raw files, batch assets, localized release notes, and updates) without exposing secret API tokens or communicating with Git provider APIs directly from client code.
 
 Supported platforms include **GitHub** (Cloud & Enterprise Server), **GitLab** (Cloud & Self-Managed), **Gitea / Forgejo / Codeberg**, **GitVerse**, **GitFlic**, **Bitbucket Cloud**, **Azure DevOps**, and **OneDev**.
 
@@ -349,7 +349,7 @@ GIT_API_URL=https://code.onedev.io/~api  # or https://onedev.mycompany.com/~api
 
 ## Deployment to Vercel
 
-1. Create a Git repository (e.g. `tauri-proxy-updater`) and push this project.
+1. Create a Git repository (e.g. `tauri-gateway`) and push this project.
 2. Log in to [Vercel](https://vercel.com/) and click **Add New -> Project**.
 3. Select your repository, leave **Framework Preset** as **Other**, and click **Deploy**.
 4. In the Vercel Dashboard, go to **Settings -> Environment Variables** and add your provider configuration (e.g. `GIT_PROVIDER`, `GIT_TOKEN`, `REPO_OWNER`, `REPO_NAME`).

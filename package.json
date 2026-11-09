@@ -1,7 +1,7 @@
 {
-  "name": "tauri-proxy-updater",
+  "name": "tauri-gateway",
   "version": "1.0.0",
-  "description": "An auto-updater proxy server for Tauri applications, designed to work with a private repository.",
+  "description": "A secure Git API gateway and updater proxy for Tauri applications, protecting access tokens for private and public repositories.",
   "author": "Autapomorph",
   "license": "GPL-3.0-only",
   "private": true,
