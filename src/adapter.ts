@@ -1,13 +1,9 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { Request, Response } from 'express';
 
-export type VercelLikeHandler = (
-  req: VercelRequest,
-  res: VercelResponse,
-) => Promise<unknown> | unknown;
+import type { GatewayHandler, GatewayRequest } from './types/http.js';
 
 export function createAdapter(
-  handler: VercelLikeHandler,
+  handler: GatewayHandler,
   queryBuilder?: (req: Request) => Record<string, unknown>,
 ) {
   return async (req: Request, res: Response) => {
@@ -17,10 +13,9 @@ export function createAdapter(
 
       const adaptedReq = Object.assign(req, {
         query: mergedQuery,
-        headers: req.headers,
-      }) as unknown as VercelRequest;
+      }) as unknown as GatewayRequest;
 
-      await handler(adaptedReq, res as unknown as VercelResponse);
+      await handler(adaptedReq, res);
     } catch {
       if (!res.headersSent) {
         res.status(500).send('Internal Server Error');

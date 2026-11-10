@@ -6,7 +6,7 @@ export function corsMiddleware(_req: Request, res: Response, next: NextFunction)
   res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.header(
     'Access-Control-Allow-Headers',
-    'Accept, Content-Type, X-App-Language, X-Update-Channel, X-Vercel-Protection-Bypass',
+    'Accept, Content-Type, X-App-Language, X-Framework-Version, X-Update-Channel, X-Vercel-Protection-Bypass',
   );
 
   if (_req.method === 'OPTIONS') {

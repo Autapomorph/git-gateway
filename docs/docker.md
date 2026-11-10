@@ -16,7 +16,7 @@ flowchart LR
     Express --> Providers["Git Providers (GitHub, GitLab, etc.)"]
 ```
 
-1. **`tauri-gateway`**:
+1. **`git-gateway`**:
    - Node.js runtime (v24 alpine, multi-stage build).
    - Express HTTP server ([`src/server.ts`](../src/server.ts)) bundled with `tsup`.
    - Runs as a non-root `node` user for improved security.
@@ -26,9 +26,9 @@ flowchart LR
 2. **`nginx`**:
    - Lightweight `nginx:alpine` reverse proxy.
    - Public ports: `80` (HTTP) and `443` (HTTPS with **HTTP/2** enabled via `http2 on;`).
-   - Upstream pool to `tauri-gateway` using persistent `keepalive 32` connections over HTTP/1.1 for minimal latency.
-   - Configured to pass client headers (`X-Real-IP`, `X-Forwarded-*`, `X-Update-Channel`, `X-App-Language`).
-   - Extended timeouts and tuned proxy buffers for streaming large binary files (`/download`, `/file`).
+   - Upstream pool to `git-gateway` using persistent `keepalive 32` connections over HTTP/1.1 for minimal latency.
+   - Configured to pass client headers (`X-Real-IP`, `X-Forwarded-*`, `X-Update-Channel`, `X-App-Language`, `X-Framework-Version`).
+   - Extended timeouts and tuned proxy buffers for streaming large binary files (`/api/v1/download`, `/api/v1/file`).
 
 ---
 
@@ -132,7 +132,7 @@ docker compose logs -f
 - **Restart the gateway service after editing `.env`**:
 
   ```bash
-  docker compose up -d tauri-gateway
+  docker compose up -d git-gateway
   ```
 
 - **Rebuild images when updating the source code**:

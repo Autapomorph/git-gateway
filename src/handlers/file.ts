@@ -1,7 +1,6 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 import { REPO_BRANCH } from '../lib/config/index.js';
 import { getProvider } from '../lib/providers/index.js';
+import type { GatewayRequest, GatewayResponse } from '../types/http.js';
 
 function sanitizePath(rawPath: string): string {
   const normalized = rawPath.replace(/\\/g, '/');
@@ -21,7 +20,7 @@ function sanitizePath(rawPath: string): string {
   return safeSegments.join('/');
 }
 
-export async function fileHandler(req: VercelRequest, res: VercelResponse) {
+export async function fileHandler(req: GatewayRequest, res: GatewayResponse) {
   if (req.method !== 'GET') {
     return res.status(405).send('Method Not Allowed');
   }

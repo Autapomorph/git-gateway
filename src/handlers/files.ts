@@ -1,8 +1,7 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 import { REPO_BRANCH } from '../lib/config/index.js';
 import { isTextContent } from '../lib/mime.js';
 import { getProvider } from '../lib/providers/index.js';
+import type { GatewayRequest, GatewayResponse } from '../types/http.js';
 
 const MAX_BATCH_FILES = 50;
 
@@ -29,7 +28,7 @@ interface FileResponseItem {
   size: number;
 }
 
-export async function filesHandler(req: VercelRequest, res: VercelResponse) {
+export async function filesHandler(req: GatewayRequest, res: GatewayResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
   }

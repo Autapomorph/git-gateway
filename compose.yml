@@ -1,9 +1,9 @@
 services:
-  tauri-gateway:
+  git-gateway:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: tauri-gateway
+    container_name: git-gateway
     restart: unless-stopped
     env_file:
       - path: .env
@@ -19,11 +19,11 @@ services:
       retries: 3
       start_period: 5s
     networks:
-      - tauri-net
+      - gateway-net
 
   nginx:
     image: nginx:alpine
-    container_name: tauri-nginx
+    container_name: gateway-nginx
     restart: unless-stopped
     ports:
       - '80:80'
@@ -32,11 +32,11 @@ services:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./docker/certs:/etc/nginx/certs:ro
     depends_on:
-      tauri-gateway:
+      git-gateway:
         condition: service_healthy
     networks:
-      - tauri-net
+      - gateway-net
 
 networks:
-  tauri-net:
+  gateway-net:
     driver: bridge

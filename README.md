@@ -1,10 +1,12 @@
-# Tauri Gateway
+# Git Gateway
 
-A high-performance, secure Git API gateway and auto-updater proxy for Tauri v2 applications. It enables Tauri apps to seamlessly interact with private and public Git repositories (fetching raw files, batch assets, localized release notes, and updates) without exposing secret API tokens or communicating with Git provider APIs directly from client code.
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)
+
+A high-performance, secure Git API gateway and multi-framework auto-updater proxy for client applications (Tauri, Wails, Electron, and more). It enables desktop and client apps to seamlessly interact with private and public Git repositories (fetching raw files, batch assets, localized release notes, and updates) without exposing secret API tokens or communicating directly with Git provider APIs.
 
 Supported platforms include **GitHub** (Cloud & Enterprise Server), **GitLab** (Cloud & Self-Managed), **Gitea / Forgejo / Codeberg**, **GitVerse**, **GitFlic**, **Bitbucket Cloud**, **Azure DevOps**, and **OneDev**.
 
-It shields your access tokens from end-users, streams installer downloads, handles multi-channel releases (`stable` and `prerelease`), and serves markdown/MDX release notes.
+It shields your access tokens from end-users, streams installer downloads, handles multi-channel releases (`stable` and `prerelease`), and serves markdown/MDX release notes with full BCP 47 i18n support.
 
 ---
 
@@ -12,41 +14,113 @@ It shields your access tokens from end-users, streams installer downloads, handl
 
 - **Multi-Provider Support:** First-class support for GitHub, GitLab, Gitea, Forgejo, Codeberg, GitVerse, GitFlic, Bitbucket, Azure DevOps, and OneDev (including self-hosted/enterprise instances).
 - **Token Security:** Hides credentials from client apps; end-users never see or need API tokens.
-- **Dynamic Updates:** Natively compatible with `@tauri-apps/plugin-updater` v2 format.
+- **Multi-Framework Auto-Updates (`/api/v1/update/{framework}/...`):**
+  - **Tauri:** Natively compatible with Tauri v1 and Tauri v2 (`/api/v1/update/tauri/:target/:version` and `latest.json`) with automatic protocol version negotiation.
+  - **Wails v3:** Fully compatible with official Wails v3 Update Manifest Protocol and in-place binary swapping.
+  - **Electron, Sparkle & Generic:** Designed for extensible multi-platform update distribution.
 - **Multi-Channel Releases:** Segregates `stable` and `prerelease` (beta/alpha) channels.
-- **Flexible Channel Selection:** Supports channel selection via HTTP header or query parameter, with well-defined priority.
-- **Binary Streaming:** Efficiently proxies binary downloads (`.exe`, `.zip`, `.sig`, `.dmg`, etc.) directly from release assets without memory bloat.
-- **Static Manifest Support:** Serves `latest.json`, `latest.stable.json`, and `latest.prerelease.json` manifests from release assets (sorted strictly by SemVer 2.0) or directly from the repository with automated fallbacks.
-- **Rich Release Notes System:** Serves dedicated version release notes written in Markdown or MDX (`release-notes/<version>.mdx`), with full YAML frontmatter parsing (`title`, `date`, `tags`), multi-language BCP 47 localization support, and automatic fallbacks to provider release notes when needed.
-- **Multi-Language Support (i18n):** Serves localized release notes via `?lang=` query parameter or `X-App-Language` header with BCP 47 tags (e.g. `1.3.1.pt-BR.mdx`, `1.3.1.pt.mdx`) and configurable fallback chains (`FALLBACK_LANGUAGE`).
-- **Full Customization:** Configurable manifest resolution strategy (`MANIFEST_SOURCE`), target repository branch (`REPO_BRANCH`), manifests folder (`MANIFESTS_DIR`), release notes folder (`RELEASE_NOTES_DIR`), and fallback language (`FALLBACK_LANGUAGE`).
+- **Flexible Channel Selection:** Supports channel selection via HTTP header (`X-Update-Channel`) or query parameter, with well-defined priority.
+- **Binary Streaming:** Efficiently proxies binary downloads (`.exe`, `.zip`, `.sig`, `.dmg`, etc.) directly from release assets without memory bloat (`/api/v1/download`).
+- **Raw & Batch Files (`/api/v1/file`, `/api/v1/files`):** Fetch single raw files or batch requests with automatic text/binary encoding from repository branches/tags.
+- **Rich Release Notes System (`/api/v1/release-notes`):** Serves dedicated version release notes written in Markdown or MDX (`release-notes/<version>.mdx`), with full YAML frontmatter parsing (`title`, `date`, `tags`), multi-language BCP 47 localization support, and automatic fallbacks to provider release notes when needed.
+- **Pure & Clean REST Architecture:** Structured around canonical `/api/v1/*` endpoints without URL legacy pollution.
 
 ---
 
-## API Endpoints Reference
+## API Endpoints Reference (`/api/v1`)
 
-### 1. Check for Updates
+All endpoints use the canonical `/api/v1` prefix.
+
+### 1. Check for Updates (Tauri)
 
 ```http
-GET /update/:target/:version
+GET /api/v1/update/tauri/:target/:version
 ```
 
-Primary endpoint for the Tauri updater client.
+Primary update endpoint for Tauri applications (supporting both Tauri v1 and Tauri v2).
 
 - **Route Parameters:**
   - `:target` — Target platform identifier (e.g. `windows-x86_64`, `windows-aarch64`, `darwin-aarch64`, `linux-x86_64`).
   - `:version` — Currently installed client version (e.g. `1.3.1`, `1.4.0-beta.1`).
+- **Framework Protocol Negotiation:**
+  Automatically determines whether to return Tauri v1 format (flat JSON) or Tauri v2 format (nested `platforms[target]`) via Content Negotiation (`X-Framework-Version` > `Accept` > `User-Agent` > default: v2).
 - **Channel Selection:** via `?channel=` query parameter or `X-Update-Channel` header.
 - **Responses:**
   - `204 No Content`: The client is already running the latest version.
-  - `200 OK`: A new version is available. Returns Tauri-compliant update metadata with direct download links pointing to `/download?asset_id=...`.
+  - `200 OK`: A new version is available. Returns update metadata with secure download links pointing to `/api/v1/download?asset_id=...`.
 
 ---
 
-### 2. Download Release Asset
+### 2. Static Manifests (Tauri)
 
 ```http
-GET /download?asset_id=:id
+GET /api/v1/update/tauri/latest.json
+GET /api/v1/update/tauri/latest.:channel.json
+```
+
+Serves release manifests (`latest.json`, `latest.stable.json`, `latest.prerelease.json`) according to the `MANIFEST_SOURCE` strategy (`auto`, `releases`, or `repo`).
+
+---
+
+### 3. Wails v3 In-App Updates & Manifests
+
+```http
+GET /api/v1/update/wails/check?platform=:goos&arch=:goarch&version=:version
+GET /api/v1/update/wails/manifest.json
+GET /api/v1/update/wails/manifest.:channel.json
+```
+
+Endpoint for official Wails v3 Update Manifest Protocol and in-place binary swapping.
+
+- **Query Parameters (for `/check`):**
+  - `platform` — Target OS (`windows`, `darwin`, `linux`).
+  - `arch` — Architecture (`amd64`, `arm64`, `386`, `arm`).
+  - `version` — Installed version (e.g. `1.0.0`).
+- **Responses:**
+  - `204 No Content`: The client is already running the latest version.
+  - `200 OK`: JSON manifest with target platforms, SHA-256 checksums, signatures, and secured binary download URLs.
+
+---
+
+### 4. Electron Auto-Updates (electron-updater)
+
+```http
+GET /api/v1/update/electron/:file
+```
+
+Serves YAML manifests for `electron-updater` (e.g. `latest.yml`, `latest-mac.yml`, `latest-linux.yml`, `beta.yml`).
+
+- Automatically rewrites release URLs to the secure `/api/v1/download` proxy.
+- Dynamically generates the manifest with SHA-512 hashes if `.yml` was not pre-generated.
+
+---
+
+### 5. Sparkle / WinSparkle Appcast Feed
+
+```http
+GET /api/v1/update/sparkle/appcast.xml
+```
+
+Serves an RSS 2.0 XML appcast feed with `xmlns:sparkle` schema, EdDSA signatures (`sparkle:edSignature`), enclosure binary downloads, and links to release notes.
+
+---
+
+### 6. Generic Client Updates (REST / JSON)
+
+```http
+GET /api/v1/update/generic/check?version=:version&target=:target&arch=:arch
+```
+
+Universal update check endpoint for custom client apps, mobile clients, and CLI tools.
+
+- Returns a standardized JSON object with `has_update`, `current_version`, `latest_version`, and `asset` metadata (download URL, SHA checksum, size).
+
+---
+
+### 7. Download Release Asset
+
+```http
+GET /api/v1/download?asset_id=:id
 ```
 
 Securely proxies the release binary asset download from the Git provider.
@@ -58,29 +132,10 @@ Securely proxies the release binary asset download from the Git provider.
 
 ---
 
-### 3. Static Manifests
+### 8. Version Release Notes (Rich Markdown / MDX)
 
 ```http
-GET /latest.json
-GET /latest.:channel.json
-```
-
-Serves static release manifests (`latest.json`, `latest.stable.json`, `latest.prerelease.json`) according to the `MANIFEST_SOURCE` strategy:
-
-- **`auto` (default):** Searches for the manifest asset among published releases sorted descending by SemVer 2.0 (picking the highest version regardless of publication date, preventing hotfixes on older branches from downgrading clients). If not found in releases, automatically falls back to the repository under `<MANIFESTS_DIR>`.
-- **`releases`:** Strictly searches among release assets.
-- **`repo`:** Strictly searches repository files under `<MANIFESTS_DIR>` (defaults to the repository root).
-
-- **Channel Selection:** via filename (e.g. `/latest.prerelease.json`), `?channel=` query parameter, or `X-Update-Channel` header.
-- **Fallback:** If a channel-specific file is not present in the release or repository, automatically falls back to `latest.json`.
-
----
-
-### 4. Version Release Notes (Rich Markdown / MDX)
-
-```http
-GET /release-notes/:version
-GET /changelogs/:version    (alias for backward compatibility)
+GET /api/v1/release-notes/:version
 ```
 
 Fetches the release notes for a specific version, with full multi-language (i18n) localization support.
@@ -90,84 +145,39 @@ Fetches the release notes for a specific version, with full multi-language (i18n
 - **Language / Locale Selection:**
   - `?lang=` query parameter (highest priority, e.g. `?lang=pt-BR`, `?lang=ru`, `?lang=en`).
   - `X-App-Language` HTTP header (e.g. `X-App-Language: pt-BR`).
-  - If neither is provided, falls back to the configured `FALLBACK_LANGUAGE` (or `en`).
-- **File Structure & Layouts (`RELEASE_NOTES_DIR_STRUCTURE`):**
-  Release notes are placed in `<RELEASE_NOTES_DIR>` (defaults to `release-notes/`) using BCP 47 language tags across two supported directory structures:
-  - **Nested subfolders (`nested`):** `<RELEASE_NOTES_DIR>/<locale>/<version>.mdx` or `.md`
-    - e.g. `release-notes/pt-BR/1.3.1.mdx`, `release-notes/pt/1.3.1.mdx`, `release-notes/en/1.3.1.mdx`
-  - **Flat files (`flat`):** `<RELEASE_NOTES_DIR>/<version>.<locale>.mdx` or `.md` and base `<version>.mdx`
-    - e.g. `release-notes/1.3.1.pt-BR.mdx`, `release-notes/1.3.1.pt.mdx`, `release-notes/1.3.1.mdx`
-- **Resolution & Fallback Strategy:**
-  1. Configurable via `RELEASE_NOTES_DIR_STRUCTURE`:
-     - **`auto` (default):** Searches nested subfolders first across the locale fallback chain. If no localized file is found in nested folders, falls back to flat files across the same fallback chain, and finally the base `<version>.mdx` file.
-     - **`nested`:** Searches strictly inside nested subfolders (`<locale>/<version>.mdx`).
-     - **`flat`:** Searches strictly among flat files (`<version>.<locale>.mdx` and `<version>.mdx`).
-  2. Locale fallback chain example (when client requests `pt-BR` and `FALLBACK_LANGUAGE=en-US`):
-     - `pt-BR` (client regional locale)
-     - `pt` (client base language)
-     - `en-US` (configured fallback locale)
-     - `en` (configured/default base fallback)
-  3. If no matching file is found in the repository, falls back to the body of the corresponding provider release/tag (`release.body`).
-  4. Optimized for performance: executes **exactly 1 network request** to list repository files and matches candidates in-memory.
-- **Response Example:**
-  ```json
-  {
-    "version": "1.3.1",
-    "locale": "pt-BR",
-    "releasedAt": "2026-09-21T18:23:25Z",
-    "tags": ["feature", "fix"],
-    "notes": "Full markdown content with frontmatter stripped"
-  }
-  ```
+  - Falls back to `FALLBACK_LANGUAGE` (or `en`).
 
 ---
 
-### 5. Release Notes Index (List Versions)
+### 9. Release Notes Index (List Versions)
 
 ```http
-GET /release-notes
-GET /changelogs    (alias for backward compatibility)
+GET /api/v1/release-notes
 ```
 
-Returns an array of all available versions that have release notes files in `<RELEASE_NOTES_DIR>`.
-
-- **Channel Selection:** Pass `?channel=stable` or header `X-Update-Channel: stable` to filter out pre-release versions.
-- **Response Example:**
-  ```json
-  {
-    "versions": ["1.4.0-beta.2", "1.4.0-beta.1", "1.3.1", "1.3.0"]
-  }
-  ```
-  _(Sorted descending according to SemVer 2.0)_.
+Returns an array of all available versions that have release notes files in `<RELEASE_NOTES_DIR>` (sorted descending by SemVer 2.0).
 
 ---
 
-### 6. Single File Download (Raw Content)
+### 10. Single File Download (Raw Content)
 
 ```http
-GET /file/:path*
-GET /file?path=:path&ref=:ref
+GET /api/v1/file/:path*
+GET /api/v1/file?path=:path&ref=:ref
 ```
 
 Fetches the raw contents of any file from the repository, securely streaming or sending it with the appropriate `Content-Type` header without exposing access tokens.
 
-- **Parameters:**
-  - `path` — File path in repository (e.g. `package.json`, `assets/logo.png`, `src/config.json`).
-  - `ref` _(optional)_ — Git branch, tag, or commit hash (defaults to `REPO_BRANCH`, e.g. `main`).
-- **Response:**
-  - `200 OK` with raw content (`application/json`, `image/png`, `text/plain`, etc.).
-  - `404 Not Found` if the file doesn't exist.
-
 ---
 
-### 7. Batch Files Download (Multiple Files in JSON)
+### 11. Batch Files Download (Multiple Files in JSON)
 
 ```http
-POST /files?ref=:ref
-GET /files?paths=:path1,:path2&ref=:ref
+POST /api/v1/files?ref=:ref
+GET /api/v1/files?paths=:path1,:path2&ref=:ref
 ```
 
-Retrieves multiple files in a single network request as a JSON object. Text files are encoded in `utf-8`, and binary files are encoded in `base64`.
+Retrieves multiple files in a single network request as a JSON object (text files encoded in `utf-8`, binary in `base64`).
 
 - **Parameters:**
   - `ref` _(optional)_ — Git branch, tag, or commit hash (defaults to `REPO_BRANCH`).
@@ -238,6 +248,29 @@ const betaUpdate = await check({
   },
 });
 ```
+
+---
+
+## Framework Protocol Versioning (Content Negotiation)
+
+Endpoints like `/api/v1/update/tauri/:target/:version` dynamically negotiate the protocol format to cleanly serve clients running different framework generations without polluting URL paths:
+
+- **Tauri v1 Protocol**: Flat JSON with top-level `url`, `version`, `signature`, and `notes`.
+- **Tauri v2 Protocol** _(default)_: Nested JSON containing `platforms[target]` with `url` and `signature`.
+
+### Priority Rules
+
+When determining the client protocol version, the server applies the following order of precedence:
+
+$$\text{Query Parameter}\; (\texttt{?framework\_version=}) \quad \mathbf{>} \quad \text{HTTP Header}\; (\texttt{X-Framework-Version}) \quad \mathbf{>} \quad \text{Accept Header}\; (\texttt{application/vnd.<fw>.vX+json}) \quad \mathbf{>} \quad \text{User-Agent} \quad \mathbf{>} \quad \text{Default}\; (\text{Latest})$$
+
+1. **Query Parameter (`?framework_version=...`)**: Explicit override, e.g. `?framework_version=1`.
+2. **HTTP Header (`X-Framework-Version: ...`)**: Explicit framework protocol version, e.g. `X-Framework-Version: 1`.
+3. **Accept Header (`Accept: application/vnd.tauri.v1+json`)**: Standard REST vendor MIME type.
+4. **User-Agent Heuristic**:
+   - `tauri-plugin-updater` $\to$ Tauri v2 protocol.
+   - `tauri-updater` (or Tauri v1 client) $\to$ Tauri v1 protocol.
+5. **Default**: Latest stable protocol version (Tauri v2).
 
 ---
 
@@ -349,14 +382,14 @@ GIT_API_URL=https://code.onedev.io/~api  # or https://onedev.mycompany.com/~api
 
 ## Deployment to Vercel
 
-1. Create a Git repository (e.g. `tauri-gateway`) and push this project.
+1. Create a Git repository (e.g. `git-gateway`) and push this project.
 2. Log in to [Vercel](https://vercel.com/) and click **Add New -> Project**.
 3. Select your repository, leave **Framework Preset** as **Other**, and click **Deploy**.
 4. In the Vercel Dashboard, go to **Settings -> Environment Variables** and add your provider configuration (e.g. `GIT_PROVIDER`, `GIT_TOKEN`, `REPO_OWNER`, `REPO_NAME`).
 5. **Deployment Protection / OPTIONS Allowlist (Required if Deployment Protection is enabled):**  
    If Vercel Deployment Protection (or Vercel Authentication) is enabled on your project or preview deployments, allow CORS preflight (`OPTIONS`) requests so client applications (such as Tauri Webviews or web frontends) can reach the API without 401 Unauthorized or redirect errors.
 
-   Because Vercel limits the OPTIONS Allowlist to a maximum of 4 paths, all endpoints support the common `/api` prefix (e.g. `/api/update`, `/api/download`, `/api/latest`, `/api/release-notes`, `/api/file`, `/api/files`):
+   Because Vercel limits the OPTIONS Allowlist to a maximum of 4 paths, all endpoints use the common `/api` prefix (e.g. `/api/v1/update/tauri/v2/...`, `/api/v1/download`, `/api/v1/files`):
    - Go to **Project Settings -> Deployment Protection -> OPTIONS Allowlist** (see [Vercel Documentation](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/options-allowlist)).
    - Add the following path to the allowlist:
      - `/api`
@@ -390,8 +423,14 @@ In your Tauri project's `tauri.conf.json`, specify your proxy endpoint:
   "updater": {
     "pubkey": "<your-tauri-pubkey>",
     "endpoints": [
-      "https://your-proxy.vercel.app/update/{{target}}-{{arch}}/{{current_version}}"
+      "https://your-proxy.vercel.app/api/v1/update/tauri/v2/{{target}}/{{current_version}}"
     ]
   }
 }
 ```
+
+---
+
+## 📄 License
+
+Distributed under the **GNU General Public License v3.0** (GPL-3.0). See [LICENSE](./LICENSE) for more details.

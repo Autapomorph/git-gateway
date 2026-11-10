@@ -1,11 +1,10 @@
 import { Readable } from 'node:stream';
 import type { ReadableStream as WebReadableStream } from 'node:stream/web';
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 import { getProvider } from '../lib/providers/index.js';
+import type { GatewayRequest, GatewayResponse } from '../types/http.js';
 
-export async function downloadHandler(req: VercelRequest, res: VercelResponse) {
+export async function downloadHandler(req: GatewayRequest, res: GatewayResponse) {
   if (req.method !== 'GET') {
     return res.status(405).send('Method Not Allowed');
   }

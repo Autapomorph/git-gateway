@@ -1,9 +1,11 @@
 export const DEFAULT_CONTENT_TYPE = 'application/octet-stream';
 
 export interface UnifiedAsset {
+  contentType?: string;
   downloadUrl?: string;
   id: string;
   name: string;
+  size?: number;
   url?: string;
 }
 

@@ -7,66 +7,70 @@
         { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Accept, Content-Type, X-App-Language, X-Update-Channel, X-Vercel-Protection-Bypass"
+          "value": "Accept, Content-Type, X-App-Language, X-Framework-Version, X-Update-Channel, X-Vercel-Protection-Bypass"
         }
       ]
     }
   ],
   "rewrites": [
     {
-      "source": "/api/file/(.*)",
-      "destination": "/api/file?path=$1"
+      "source": "/api/v1/update/tauri/:target/:version",
+      "destination": "/api/update/tauri?target=:target&version=:version"
     },
     {
-      "source": "/api/update/:target/:version",
-      "destination": "/api/update?target=:target&version=:version"
+      "source": "/api/v1/update/tauri/latest.:channel.json",
+      "destination": "/api/latest?file=latest.:channel.json"
     },
     {
-      "source": "/api/latest.:channel*.json",
-      "destination": "/api/latest?file=latest.:channel*.json"
-    },
-    {
-      "source": "/api/latest.json",
+      "source": "/api/v1/update/tauri/latest.json",
       "destination": "/api/latest?file=latest.json"
     },
     {
-      "source": "/api/release-notes/:version",
-      "destination": "/api/release-notes?version=:version"
+      "source": "/api/v1/update/wails/check",
+      "destination": "/api/update/wails"
     },
     {
-      "source": "/file/(.*)",
+      "source": "/api/v1/update/wails/manifest.:channel.json",
+      "destination": "/api/update/wails?file=manifest.:channel.json"
+    },
+    {
+      "source": "/api/v1/update/wails/manifest.json",
+      "destination": "/api/update/wails?file=manifest.json"
+    },
+    {
+      "source": "/api/v1/update/generic/check",
+      "destination": "/api/update/generic"
+    },
+    {
+      "source": "/api/v1/update/electron/:file",
+      "destination": "/api/update/electron?file=:file"
+    },
+    {
+      "source": "/api/v1/update/sparkle/appcast.xml",
+      "destination": "/api/update/sparkle"
+    },
+    {
+      "source": "/api/v1/file/(.*)",
       "destination": "/api/file?path=$1"
     },
     {
-      "source": "/file",
+      "source": "/api/v1/file",
       "destination": "/api/file"
     },
     {
-      "source": "/files",
+      "source": "/api/v1/files",
       "destination": "/api/files"
     },
     {
-      "source": "/update/:target/:version",
-      "destination": "/api/update?target=:target&version=:version"
-    },
-    {
-      "source": "/download",
+      "source": "/api/v1/download",
       "destination": "/api/download"
     },
     {
-      "source": "/latest.:channel*.json",
-      "destination": "/api/latest?file=latest.:channel*.json"
-    },
-    {
-      "source": "/latest.json",
-      "destination": "/api/latest?file=latest.json"
-    },
-    {
-      "source": "/release-notes/:version",
+      "source": "/api/v1/release-notes/:version",
       "destination": "/api/release-notes?version=:version"
     },
     {
-      "source": "/release-notes",
+      "source": "/api/v1/release-notes",
       "destination": "/api/release-notes"
     }
   ]

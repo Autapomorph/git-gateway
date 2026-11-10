@@ -1,13 +1,12 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 import { getManifestPath, MANIFEST_SOURCE, REPO_BRANCH } from '../lib/config/index.js';
 import { getProvider } from '../lib/providers/index.js';
 import { getEligibleReleases } from '../lib/semver.js';
+import type { GatewayRequest, GatewayResponse } from '../types/http.js';
 
 const VALID_LATEST_FILE_PATTERN = /^latest(\.[a-zA-Z0-9_.-]+)*\.json$/i;
 const DEFAULT_MANIFEST_FILE = 'latest.json';
 
-export async function latestHandler(req: VercelRequest, res: VercelResponse) {
+export async function latestHandler(req: GatewayRequest, res: GatewayResponse) {
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }

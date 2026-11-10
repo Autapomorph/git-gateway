@@ -1,5 +1,3 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 import {
   FALLBACK_LANGUAGE,
   RELEASE_NOTES_DIR,
@@ -10,8 +8,9 @@ import { parseFrontmatter } from '../lib/frontmatter.js';
 import { extractVersionFromFileName, findBestReleaseNotesMatch } from '../lib/i18n.js';
 import { getProvider } from '../lib/providers/index.js';
 import { compareSemver, isStableVersion } from '../lib/semver.js';
+import type { GatewayRequest, GatewayResponse } from '../types/http.js';
 
-export async function releaseNotesHandler(req: VercelRequest, res: VercelResponse) {
+export async function releaseNotesHandler(req: GatewayRequest, res: GatewayResponse) {
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }

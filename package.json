@@ -1,7 +1,7 @@
 {
-  "name": "tauri-gateway",
+  "name": "git-gateway",
   "version": "1.0.0",
-  "description": "A secure Git API gateway and updater proxy for Tauri applications, protecting access tokens for private and public repositories.",
+  "description": "A secure Git API gateway and multi-framework updater proxy protecting access tokens for private and public repositories.",
   "author": "Autapomorph",
   "license": "GPL-3.0-only",
   "private": true,
@@ -21,7 +21,7 @@
     "node": ">=24.0.0"
   },
   "dependencies": {
-    "dotenv": "^18.0.9",
+    "dotenv": "^18.0.10",
     "express": "^5.3.0",
     "gray-matter": "^4.0.3",
     "mime-types": "^3.0.2",
