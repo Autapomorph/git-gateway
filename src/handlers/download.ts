@@ -5,6 +5,10 @@ import { getProvider } from '../lib/providers/index.js';
 import type { GatewayRequest, GatewayResponse } from '../types/http.js';
 
 export async function downloadHandler(req: GatewayRequest, res: GatewayResponse) {
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).send('Method Not Allowed');
   }

@@ -29,6 +29,10 @@ interface FileResponseItem {
 }
 
 export async function filesHandler(req: GatewayRequest, res: GatewayResponse) {
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
   }

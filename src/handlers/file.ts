@@ -21,6 +21,10 @@ function sanitizePath(rawPath: string): string {
 }
 
 export async function fileHandler(req: GatewayRequest, res: GatewayResponse) {
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).send('Method Not Allowed');
   }
